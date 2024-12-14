@@ -1,0 +1,44 @@
+package com.backend.expense_backend.service;
+
+import com.backend.expense_backend.dto.UserDTO;
+import com.backend.expense_backend.model.User;
+
+import com.backend.expense_backend.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+public class AuthService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    // Register a new user
+    public User registerUser(UserDTO userDTO) {
+        if (userRepository.findByAccountName(userDTO.getAccountName()).isPresent() ||
+                userRepository.findByEmail(userDTO.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Account name or email already exists");
+        }
+
+        User user = new User();
+        user.setName(userDTO.getName());
+        user.setAccountName(userDTO.getAccountName());
+        user.setEmail(userDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        user.setPhoneNumber(userDTO.getPhoneNumber());
+
+        return userRepository.save(user);
+    }
+
+    // Find user by accountName or email => dùng để login
+    public Optional<User> findUserByPrincipal(String principal) {
+        return userRepository.findByAccountName(principal)
+                .or(() -> userRepository.findByEmail(principal));
+    }
+}

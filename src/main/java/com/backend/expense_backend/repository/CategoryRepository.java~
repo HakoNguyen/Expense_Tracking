@@ -1,0 +1,14 @@
+package com.backend.expense_backend.repository;
+
+import com.backend.expense_backend.model.Category;
+import io.micrometer.common.lang.NonNullApi;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+@NonNullApi
+public interface CategoryRepository extends JpaRepository<Category, Long> {
+    List<Category> findByName(String name);
+}

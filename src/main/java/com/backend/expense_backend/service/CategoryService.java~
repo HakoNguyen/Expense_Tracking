@@ -1,0 +1,41 @@
+package com.backend.expense_backend.service;
+
+import com.backend.expense_backend.dto.CategoryDTO;
+import com.backend.expense_backend.model.Category;
+import com.backend.expense_backend.repository.CategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class CategoryService {
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    public Category createCategory(CategoryDTO categoryDTO) {
+        Category category = new Category();
+        category.setName(categoryDTO.getName());
+        return categoryRepository.save(category);
+    }
+
+    public Category updateCategory(Long id, CategoryDTO categoryDTO) {
+        Category category = categoryRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Category not found"));
+        category.setName(categoryDTO.getName());
+        return categoryRepository.save(category);
+    }
+
+    public void deleteCategory(Long id) {
+        categoryRepository.deleteById(id);
+    }
+
+    public Optional<Category> findCategoryById(Long id) {
+        return categoryRepository.findById(id);
+    }
+
+    public List<Category> findAllCategories() {
+        return categoryRepository.findAll();
+    }
+}
