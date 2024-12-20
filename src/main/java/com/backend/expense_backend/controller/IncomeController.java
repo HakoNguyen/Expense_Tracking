@@ -13,23 +13,23 @@ public class IncomeController {
     @Autowired
     private IncomeService incomeService;
 
-    @GetMapping("/{userId}")
-    public List<IncomeDTO> getAllIncomes(@PathVariable Long userId) {
-        return incomeService.getAllIncomes(userId);
+    @GetMapping
+    public List<IncomeDTO> getAllIncomes() {
+        return incomeService.getAllIncomes();
     }
 
     @PostMapping
     public IncomeDTO createIncome(@RequestBody IncomeDTO incomeDTO) {
-        return incomeService.createIncome(incomeDTO);
+        return incomeService.createIncome(incomeDTO); // Phương thức này đã được cập nhật để tự động cộng thu nhập vào ngân sách
     }
 
-    @PutMapping("/{id}/{userId}")
-    public IncomeDTO updateIncome(@PathVariable Long id, @PathVariable Long userId, @RequestBody IncomeDTO incomeDTO) {
-        return incomeService.updateIncome(id, userId, incomeDTO);
+    @PutMapping("/{id}")
+    public IncomeDTO updateIncome(@PathVariable Long id, @RequestBody IncomeDTO incomeDTO) {
+        return incomeService.updateIncome(id, incomeDTO);
     }
 
-    @DeleteMapping("/{id}/{userId}")
-    public void deleteIncome(@PathVariable Long id, @PathVariable Long userId) {
-        incomeService.deleteIncome(id, userId);
+    @DeleteMapping("/{id}")
+    public void deleteIncome(@PathVariable Long id) {
+        incomeService.deleteIncome(id);
     }
 }

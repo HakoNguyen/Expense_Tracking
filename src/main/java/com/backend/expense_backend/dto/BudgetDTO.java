@@ -9,6 +9,8 @@ public class BudgetDTO {
     private Long id;
     private String name;
     private double amount;
-    private Long userId;
-    private LocalDate date;
+    private int month;
+    private int year;
+
+
 }

@@ -19,14 +19,17 @@ public class ExpenseService {
     private ExpenseRepository expenseRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private CategoryRepository categoryRepository;
 
-    public BigDecimal findTotalExpensesByDate(LocalDateTime startDate, LocalDateTime endDate) {
-        return expenseRepository.findTotalExpensesByDate(startDate, endDate);
+    public BigDecimal findTotalExpensesByUserIdAndDate(Long userId, LocalDateTime startDate, LocalDateTime endDate) {
+        return expenseRepository.findTotalExpensesByUserIdAndDate(userId, startDate, endDate);
     }
 
-    public List<ExpenseDTO> getAllExpenses() {
-        return expenseRepository.findAll().stream()
+    public List<ExpenseDTO> getAllExpenses(Long userId) {
+        return expenseRepository.findByUserId(userId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -37,6 +40,11 @@ public class ExpenseService {
         expense.setAmount(expenseDTO.getAmount());
         expense.setNotes(expenseDTO.getNotes());
 
+        // Tìm kiếm User và Category từ repository
+        User user = userRepository.findById(expenseDTO.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        expense.setUser  (user);
+
         Category category = categoryRepository.findById(expenseDTO.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
         expense.setCategory(category);
@@ -45,9 +53,9 @@ public class ExpenseService {
         return convertToDTO(expenseRepository.save(expense));
     }
 
-    public ExpenseDTO updateExpense(Long id, ExpenseDTO expenseDTO) {
-        Expense expense = expenseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Expense not found"));
+    public ExpenseDTO updateExpense(Long id, Long userId, ExpenseDTO expenseDTO) {
+        Expense expense = expenseRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Expense not found or not owned by user"));
         expense.setName(expenseDTO.getName());
         expense.setAmount(expenseDTO.getAmount());
         expense.setNotes(expenseDTO.getNotes());
@@ -55,14 +63,14 @@ public class ExpenseService {
         return convertToDTO(expenseRepository.save(expense));
     }
 
-    public void deleteExpense(Long id) {
-        Expense expense = expenseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Expense not found"));
+    public void deleteExpense(Long id, Long userId) {
+        Expense expense = expenseRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Expense not found or not owned by user"));
         expenseRepository.delete(expense);
     }
 
-    public List<ExpenseDTO> getExpensesByDate(LocalDateTime startDate, LocalDateTime endDate) {
-        return expenseRepository.findByDateBetween(startDate, endDate).stream()
+    public List<ExpenseDTO> getExpensesByDate(Long userId, LocalDateTime startDate, LocalDateTime endDate) {
+        return expenseRepository.findByUserIdAndDateBetween(userId, startDate, endDate).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -73,6 +81,7 @@ public class ExpenseService {
         dto.setName(expense.getName());
         dto.setAmount(expense.getAmount());
         dto.setNotes(expense.getNotes());
+        dto.setUserId(expense.getUser().getId());
         dto.setCategoryId(expense.getCategory().getId());
         dto.setDate(expense.getDate());
         return dto;

@@ -13,9 +13,9 @@ public class BudgetController {
     @Autowired
     private BudgetService budgetService;
 
-    @GetMapping("/{userId}")
-    public List<BudgetDTO> getAllBudgets(@PathVariable Long userId) {
-        return budgetService.getAllBudgets(userId);
+    @GetMapping
+    public List<BudgetDTO> getAllBudgets() {
+        return budgetService.getAllBudgets();
     }
 
     @PostMapping
@@ -23,13 +23,19 @@ public class BudgetController {
         return budgetService.createBudget(budgetDTO);
     }
 
-    @PutMapping("/{id}/{userId}")
-    public BudgetDTO updateBudget(@PathVariable Long id, @PathVariable Long userId, @RequestBody BudgetDTO budgetDTO) {
-        return budgetService.updateBudget(id, userId, budgetDTO);
+    @PutMapping("/{id}")
+    public BudgetDTO updateBudget(@PathVariable Long id, @RequestBody BudgetDTO budgetDTO) {
+        return budgetService.updateBudget(id, budgetDTO);
     }
 
-    @DeleteMapping("/{id}/{userId}")
-    public void deleteBudget(@PathVariable Long id, @PathVariable Long userId) {
-        budgetService.deleteBudget(id, userId);
+    @DeleteMapping("/{id}")
+    public void deleteBudget(@PathVariable Long id) {
+        budgetService.deleteBudget(id);
+    }
+
+    // Thêm phương thức để lấy ngân sách theo tháng và năm
+    @GetMapping("/monthly/{month}/{year}")
+    public BudgetDTO getBudgetForMonth(@PathVariable int month, @PathVariable int year) {
+        return budgetService.getBudgetForMonth(month, year);
     }
 }

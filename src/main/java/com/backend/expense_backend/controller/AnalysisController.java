@@ -1,15 +1,17 @@
 package com.backend.expense_backend.controller;
 
 import com.backend.expense_backend.dto.AnalysisDTO;
+import com.backend.expense_backend.dto.MonthlyBudgetExpensesDTO;
 import com.backend.expense_backend.service.AnalysisService;
-import com.backend.expense_backend.service.BudgetService;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/analysis")
@@ -18,108 +20,84 @@ public class AnalysisController {
     @Autowired
     private AnalysisService analysisService;
 
-    @Autowired
-    private BudgetService budgetService;
-
-    // Phân tích chi tiêu theo tháng
-    @GetMapping("/monthly")
-    public ResponseEntity<AnalysisDTO> getMonthlyAnalysis(
-            @RequestParam Long userId,
-            @RequestParam LocalDate month) {
-        AnalysisDTO analysis = analysisService.getMonthlyAnalysis(userId, month);
-        return ResponseEntity.ok(analysis);
+    // Biểu đồ cột: So sánh chi tiêu và ngân sách theo năm
+    @GetMapping("/bar-chart")
+    public ResponseEntity<List<MonthlyBudgetExpensesDTO>> getBarChartData(@RequestParam int year) {
+        List<MonthlyBudgetExpensesDTO> barChartData = analysisService.getMonthlyBudgetExpenses(year);
+        return ResponseEntity.ok(barChartData);
     }
 
-    // Thống kê tình trạng chi tiêu qua các tháng trong năm
-    @GetMapping("/yearly")
-    public ResponseEntity<List<AnalysisDTO>> getYearlyAnalysis(
-            @RequestParam Long userId,
-            @RequestParam int year) {
-        List<AnalysisDTO> yearlyAnalysis = analysisService.getYearlyAnalysis(userId, year);
-        return ResponseEntity.ok(yearlyAnalysis);
+    // Biểu đồ đường: So sánh chi tiêu với thu nhập theo tháng
+    @GetMapping("/line-chart")
+    public ResponseEntity<List<AnalysisDTO>> getLineChartData(@RequestParam int year) {
+        List<AnalysisDTO> lineChartData = analysisService.getYearlyAnalysis(year);
+        return ResponseEntity.ok(lineChartData);
     }
 
-    // So sánh chi tiêu với ngân sách
-    @GetMapping("/compare")
-    public ResponseEntity<String> compareExpensesWithBudget(
-            @RequestParam Long userId,
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate) {
-        String comparisonResult = analysisService.compareExpensesWithBudget(userId, startDate.atStartOfDay(), endDate.atStartOfDay());
-        return ResponseEntity.ok(comparisonResult);
+    // Biểu đồ tròn: Phân loại chi tiêu theo danh mục
+    @GetMapping("/pie-chart")
+    public ResponseEntity<List<AnalysisDTO>> getPieChartData(@RequestParam int month, @RequestParam int year) {
+        LocalDate monthDate = LocalDate.of(year, month, 1); // Tạo LocalDate từ tháng và năm
+        AnalysisDTO pieChartData = analysisService.getMonthlyAnalysis(monthDate);
+
+        // Chuyển đổi từ Map<String, BigDecimal> sang List<AnalysisDTO>
+        List<AnalysisDTO> analysisList = pieChartData.getCategoryExpense().entrySet().stream()
+                .map(entry -> {
+                    AnalysisDTO dto = new AnalysisDTO();
+                    dto.setMonth(monthDate);
+                    dto.setTotalExpense(entry.getValue());
+
+                    // Tính phần trăm cho mỗi danh mục
+                    BigDecimal totalExpense = pieChartData.getTotalExpense();
+                    BigDecimal percentage = (totalExpense.compareTo(BigDecimal.ZERO) > 0)
+                            ? entry.getValue().divide(totalExpense, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100))
+                            : BigDecimal.ZERO;
+
+                    // Thiết lập phần trăm chi tiêu cho danh mục
+                    dto.setCategoryExpensePercentage(Map.of(entry.getKey(), percentage));
+
+                    // Loại bỏ các trường null
+                    if (dto.getTotalExpense() == null) {
+                        dto.setTotalExpense(null);
+                    }
+                    if (dto.getBudgetLimit() == null) {
+                        dto.setBudgetLimit(null);
+                    }
+                    if (dto.getExceededAmount() == null) {
+                        dto.setExceededAmount(null);
+                    }
+                    if (dto.getCategoryExpense() == null) {
+                        dto.setCategoryExpense(null);
+                    }
+                    if (dto.getCategoryIncome() == null) {
+                        dto.setCategoryIncome(null);
+                    }
+
+                    return dto;
+                })
+                .filter(dto -> dto.getTotalExpense() != null) // Lọc bỏ các đối tượng có totalExpense là null
+                .toList();
+
+        return ResponseEntity.ok(analysisList);
     }
 
-    // Tính tổng chi tiêu trong khoảng thời gian
-    @GetMapping("/total-expenses")
-    public ResponseEntity<Double> getTotalExpenses(
-            @RequestParam Long userId,
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate) {
-        double totalExpenses = analysisService.getTotalExpenses(userId, startDate.atStartOfDay(), endDate.atStartOfDay());
-        return ResponseEntity.ok(totalExpenses);
-    }
+    // Kiểm tra xem chi tiêu có vượt quá ngân sách hay không
+    @GetMapping("/check-budget-exceed")
+    public ResponseEntity<String> checkBudgetExceeded(@RequestParam int month, @RequestParam int year) {
+        // Tạo LocalDate từ tháng và năm
+        LocalDate monthDate = LocalDate.of(year, month, 1);
 
-    // Tính ngân sách cho một khoảng thời gian
-    @GetMapping("/budget")
-    public ResponseEntity<Double> getBudgetForPeriod(
-            @RequestParam Long userId,
-            @RequestParam LocalDate date) {
-        double budget = analysisService.getBudgetForPeriod(userId, date);
-        return ResponseEntity.ok(budget);
-    }
+        // Tính tổng chi tiêu trong tháng
+        double totalExpenses = analysisService.getTotalExpenses(monthDate.atStartOfDay(), monthDate.plusMonths(1).atStartOfDay());
 
-    // Tính chi tiêu trung bình trong khoảng thời gian
-    @GetMapping("/average-expenses")
-    public ResponseEntity<Double> getAverageExpenses(
-            @RequestParam Long userId,
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate) {
-        double averageExpenses = analysisService.getAverageExpenses(userId, startDate.atStartOfDay(), endDate.atStartOfDay());
-        return ResponseEntity.ok(averageExpenses);
-    }
+        // Tính ngân sách cho tháng
+        double budgetLimit = analysisService.getBudgetForPeriod(monthDate);
 
-    @PostMapping("/check-exceed")
-    public BudgetCheckResponse checkBudgetExceeded(@RequestBody BudgetRequest budgetRequest) {
-        LocalDate localDate = LocalDate.parse(budgetRequest.getDate());
-        boolean isExceeded = budgetService.isBudgetExceeded(budgetRequest.getUserId(), localDate);
-
-        return new BudgetCheckResponse(isExceeded, isExceeded ? "Ngân sách đã vượt quá" : "Ngân sách còn lại đủ");
-    }
-
-    // Định nghĩa lớp BudgetRequest
-    @Getter
-    public static class BudgetRequest {
-        // Getters và Setters
-        private Long userId;
-        private String date;
-
-        public void setUserId(Long userId) {
-            this.userId = userId;
-        }
-
-        public void setDate(String date) {
-            this.date = date;
-        }
-    }
-
-    // Định nghĩa lớp BudgetCheckResponse
-    @Getter
-    public static class BudgetCheckResponse {
-        // Getters và Setters
-        private boolean exceeded;
-        private String message;
-
-        public BudgetCheckResponse(boolean exceeded, String message) {
-            this.exceeded = exceeded;
-            this.message = message;
-        }
-
-        public void setExceeded(boolean exceeded) {
-            this.exceeded = exceeded;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
+        // So sánh tổng chi tiêu với ngân sách
+        if (totalExpenses > budgetLimit) {
+            return ResponseEntity.ok("Tổng chi tiêu đã vượt quá ngân sách: " + (totalExpenses - budgetLimit) + " VNĐ");
+        } else {
+            return ResponseEntity.ok("Tổng chi tiêu trong ngân sách.");
         }
     }
 }

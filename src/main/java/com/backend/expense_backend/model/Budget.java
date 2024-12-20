@@ -15,9 +15,7 @@ public class Budget {
 
     private String name;
     private double amount;
-    private LocalDate date;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    private int month; // Tháng của ngân sách
+    private int year;  // Năm của ngân sách
+    
 }

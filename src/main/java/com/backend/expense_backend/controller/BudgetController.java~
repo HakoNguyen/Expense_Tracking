@@ -1,4 +1,0 @@
-package com.backend.expense_backend.controller;
-
-public class BudgetController {
-}

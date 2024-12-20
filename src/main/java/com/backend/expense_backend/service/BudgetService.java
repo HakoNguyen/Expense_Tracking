@@ -2,9 +2,7 @@ package com.backend.expense_backend.service;
 
 import com.backend.expense_backend.dto.BudgetDTO;
 import com.backend.expense_backend.model.Budget;
-import com.backend.expense_backend.model.User;
 import com.backend.expense_backend.repository.BudgetRepository;
-import com.backend.expense_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,13 +18,10 @@ public class BudgetService {
     private BudgetRepository budgetRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private ExpenseService expenseService;
 
-    public List<BudgetDTO> getAllBudgets(Long userId) {
-        return budgetRepository.findByUserId(userId).stream()
+    public List<BudgetDTO> getAllBudgets() {
+        return budgetRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -34,53 +29,67 @@ public class BudgetService {
     public BudgetDTO createBudget(BudgetDTO budgetDTO) {
         Budget budget = new Budget();
         budget.setAmount(budgetDTO.getAmount());
-        budget.setDate(budgetDTO.getDate());
-
-        // Tìm kiếm User từ repository
-        User user = userRepository.findById(budgetDTO.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("User  not found"));
-        budget.setUser (user); // Thiết lập người dùng cho ngân sách
+        budget.setMonth(budgetDTO.getMonth());
+        budget.setYear(budgetDTO.getYear());
 
         return convertToDTO(budgetRepository.save(budget));
     }
 
-    public BudgetDTO updateBudget(Long id, Long userId, BudgetDTO budgetDTO) {
-        Budget budget = budgetRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new IllegalArgumentException("Budget not found or not owned by user"));
+    public BudgetDTO updateBudget(Long id, BudgetDTO budgetDTO) {
+        Budget budget = budgetRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Budget not found"));
         budget.setName(budgetDTO.getName());
         budget.setAmount(budgetDTO.getAmount());
-        budget.setDate(budgetDTO.getDate());
+        budget.setMonth(budgetDTO.getMonth());
+        budget.setYear(budgetDTO.getYear());
         return convertToDTO(budgetRepository.save(budget));
     }
 
-    public void deleteBudget(Long id, Long userId) {
-        Budget budget = budgetRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new IllegalArgumentException("Budget not found or not owned by user"));
+    public void deleteBudget(Long id) {
+        Budget budget = budgetRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Budget not found"));
         budgetRepository.delete(budget);
     }
 
-    public boolean isBudgetExceeded(Long userId, LocalDate date) {
-        // Lấy ngân sách cho người dùng trong tháng cụ thể
-        Budget budget = budgetRepository.findByUserIdAndDate(userId, date)
-                .orElseThrow(() -> new IllegalArgumentException("Budget not found for user"));
+    public boolean isBudgetExceeded(LocalDate date) {
+        // Lấy tháng và năm từ date
+        int month = date.getMonthValue();
+        int year = date.getYear();
+
+        // Lấy ngân sách trong tháng và năm cụ thể
+        Budget budget = budgetRepository.findByMonthAndYear(month, year)
+                .orElseThrow(() -> new IllegalArgumentException("Budget not found"));
 
         // Tính toán thời gian bắt đầu và kết thúc của tháng
-        LocalDateTime startDate = date.atStartOfDay(); // Khởi tạo startDate
-        LocalDateTime endDate = date.plusMonths(1).atStartOfDay(); // Khởi tạo endDate
+        LocalDateTime startDate = date.withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endDate = date.plusMonths(1).withDayOfMonth(1).atStartOfDay();
 
-        // Lấy tổng chi tiêu cho người dùng trong tháng cụ thể
-        BigDecimal totalExpenses = expenseService.findTotalExpensesByUserIdAndDate(userId, startDate, endDate);
+        // Lấy tổng chi tiêu trong tháng cụ thể
+        BigDecimal totalExpenses = expenseService.findTotalExpensesByDate(startDate, endDate);
 
         // So sánh tổng chi tiêu với ngân sách
         return totalExpenses != null && totalExpenses.compareTo(BigDecimal.valueOf(budget.getAmount())) > 0;
     }
+
+    public double getBudgetForPeriod(LocalDate date) {
+        Budget budget = budgetRepository.findByMonthAndYear(date.getMonthValue(), date.getYear())
+                .orElseThrow(() -> new IllegalArgumentException("Budget not found"));
+        return budget.getAmount();
+    }
+
+    public BudgetDTO getBudgetForMonth(int month, int year) {
+        Budget budget = budgetRepository.findByMonthAndYear(month, year)
+                .orElseThrow(() -> new IllegalArgumentException("Budget not found"));
+        return convertToDTO(budget);
+    }
+
     private BudgetDTO convertToDTO(Budget budget) {
         BudgetDTO dto = new BudgetDTO();
         dto.setId(budget.getId());
         dto.setName(budget.getName());
         dto.setAmount(budget.getAmount());
-        dto.setUserId(budget.getUser().getId());
-        dto.setDate(budget.getDate());
+        dto.setMonth(budget.getMonth());
+        dto.setYear(budget.getYear());
         return dto;
     }
 }
