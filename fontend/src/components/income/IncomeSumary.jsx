@@ -37,7 +37,7 @@ const IncomeSummary = () => {
 
     return (
         <div className="p-4 border-4 uppercase">
-            <h2 className="text-2xl font-bold mb-4 text-blue-600 text-center">Income Summary</h2>
+            <h2 className="text-2xl font-bold mb-4 text-blue-600">Income Summary</h2>
             <div className="mb-4">
                 <label className="mr-2">Month:</label>
                 <select value={month} onChange={handleMonthChange}>

@@ -84,7 +84,7 @@ const ExpenseContent = () => {
 
   return (
     <div className="p-4 border-4 uppercase">
-      <h1 className="text-2xl font-bold mb-4  text-blue-600 text-center">Expense Management</h1>
+      <h1 className="text-2xl font-bold mb-4  text-blue-600">Expense Management</h1>
       <button
         onClick={() => {
           setSelectedExpense(null);

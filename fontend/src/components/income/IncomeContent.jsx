@@ -104,7 +104,7 @@ const IncomeContent = () => {
 
   return (
     <div className="p-4 border-4 uppercase">
-      <h1 className="text-2xl font-bold mb-4 text-blue-600 text-center">Income Management</h1>
+      <h1 className="text-2xl font-bold mb-4 text-blue-600">Income Management</h1>
       <button
         onClick={() => {
           setSelectedIncome(null);

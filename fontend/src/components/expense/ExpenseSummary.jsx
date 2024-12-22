@@ -11,6 +11,7 @@ const ExpenseSummary = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Gọi hàm fetchTotalExpense khi month hoặc year thay đổi
     useEffect(() => {
         fetchTotalExpense();
     }, [month, year]); // Gọi lại khi month hoặc year thay đổi
@@ -20,8 +21,9 @@ const ExpenseSummary = () => {
         setError(null);
         try {
             const response = await getTotalExpenseForMonth(month, year); // Gọi API để lấy tổng chi tiêu
-            setTotalExpense(response.data); // Cập nhật tổng chi tiêu
+            const totalExpense = response.data; // Lưu tổng chi tiêu từ phản hồi
 
+            setTotalExpense(totalExpense); // Cập nhật tổng chi tiêu
 
             // Kiểm tra ngân sách
             const budgetResponse = await getBudgetByMonthAndYear(month, year);
@@ -33,7 +35,6 @@ const ExpenseSummary = () => {
             } else {
                 toast.success(`Thông báo: Tổng chi tiêu ${totalExpense.toLocaleString()} VND chưa vượt quá ngân sách ${budgetAmount.toLocaleString()} VND cho tháng ${month}/${year}.`);
             }
-
 
         } catch (error) {
             console.error("Error fetching total expense:", error); // In lỗi ra console
@@ -54,7 +55,7 @@ const ExpenseSummary = () => {
     return (
         <div className="p-4 border-4 uppercase">
             <ToastContainer />
-            <h2 className="text-2xl font-bold mb-4  text-blue-600 text-center">Expense Summary</h2>
+            <h2 className="text-2xl font-bold mb-4 text-blue-600">Expense Summary</h2>
             <div className="mb-4">
                 <label className="mr-2">Month:</label>
                 <select value={month} onChange={handleMonthChange}>
@@ -96,6 +97,4 @@ const ExpenseSummary = () => {
     );
 };
 
-
-
-export default ExpenseSummary;
+export default ExpenseSummary

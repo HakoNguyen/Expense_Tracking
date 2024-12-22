@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getBudgetForCurrentMonth } from '../../services/budgetApi'; // Giả sử bạn đã có API này
 import { ToastContainer, toast } from 'react-toastify';
+import { UserOutlined, MailOutlined, PhoneOutlined, BankOutlined } from '@ant-design/icons';
 import 'react-toastify/dist/ReactToastify.css';
 
 
@@ -65,13 +66,13 @@ const Profile = () => {
             <div className="flex items-center mb-6">
                 <img src={user.avatar} alt="Avatar" className="w-32 h-32 rounded mr-4 border border-black " />
                 <div>
-                    <h2 className="text-2xl font-semibold">{user.name}</h2>
-                    <p className="text-gray-600">{user.phone}</p>
-                    <p className="text-gray-600">{user.email}</p>
+               <h2 className="text-2xl font-semibold"><UserOutlined /> {user.name}</h2>
+                    <p className="text-gray-600"><PhoneOutlined /> {user.phone}</p>
+                    <p className="text-gray-600"><MailOutlined /> {user.email}</p>
                 </div>
             </div>
             <div className="mb-6">
-                <h3 className="text-xl font-semibold">Current Budget: {budget.toLocaleString()} VND</h3>
+                <h3 className="text-xl font-semibold"><BankOutlined /> {budget.toLocaleString()} VND</h3>
             </div>
             <div className="flex flex-col">
                 {editing ? (

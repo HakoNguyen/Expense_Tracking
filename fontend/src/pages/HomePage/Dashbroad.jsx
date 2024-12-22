@@ -29,12 +29,12 @@ function DashBroad() {
 
   return (
     <div className="uppercase">
-      <h1 className="font-semibold text-6xl font-mono text-blue-600 text-center ">
+      <h1 className="font-semibold text-6xl font-mono text-blue-600 ml-20 mt-4 ">
         Dashboard
       </h1>
 
       <div
-        className="text-base text-black font-semibold "
+        className="text-base text-black font-semibold  "
         style={{
           display: "flex",
           flexDirection: "row",
@@ -66,7 +66,7 @@ function DashBroad() {
           </div>
         </div>
 
-        <div style={{ width: "400px", marginLeft: "20px"}}>
+        <div style={{ width: "400px", marginLeft: "px"}}>
           <h2>Expense based on Category</h2>
           <MonthSelector 
             onMonthChange={handleMonthChange}

@@ -51,7 +51,7 @@ const BudgetContent = () => {
 
     return (
         <div className="p-4 border-4 uppercase ">
-            <h1 className="text-2xl font-bold mb-4 drop-shadow-lg  text-blue-600 text-center">Budget Management</h1>
+            <h1 className="text-2xl font-bold mb-4 drop-shadow-lg  text-blue-600">Budget Management</h1>
             <button onClick={() => { setSelectedBudget(null); setShowModal(true); }} className="bg-cyan-500 shadow-lg shadow-cyan-500/50 hover:bg-sky-500 text-white font-semibold px-4 py-2 rounded mb-4">
                 Add Budget
             </button>
